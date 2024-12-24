@@ -15,9 +15,13 @@ const Sidebar = () => {
     getUsers();
   }, [getUsers]);
 
-  const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+  const filteredUsers = users
+    .filter((user) => {
+      const matchesSearch = user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            user.email.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    })
+    .filter((user) => (showOnlineOnly ? onlineUsers.includes(user._id) : true));
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
