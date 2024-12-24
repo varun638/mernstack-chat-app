@@ -35,6 +35,30 @@ export const getMessages = async (req, res) => {
   }
 };
 
+export const searchUsers = async (req, res) => {
+  const { query } = req.query;
+  try {
+    const loggedInUserId = req.user._id;
+
+    const users = await User.find({
+      $and: [
+        { _id: { $ne: loggedInUserId } },
+        {
+          $or: [
+            { fullName: { $regex: query, $options: "i" } },
+            { email: { $regex: query, $options: "i" } },
+          ],
+        },
+      ],
+    }).select("-password");
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error in searchUsers controller:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export const sendMessage = async (req, res) => {
   try {
     const { text, image } = req.body;
