@@ -49,5 +49,3 @@ export const getGroups = async (req, res) => {
   }
 };
 
-
-
