@@ -7,17 +7,21 @@ export const createStatus = async (req, res) => {
     const { content, type } = req.body;
     const userId = req.user._id;
 
+    // Retrieve the most recent status for the user
+    const oldStatuses = await Status.find({ userId }).sort({ createdAt: -1 });
+
     let statusContent = content;
 
     if (type === "image" || type === "video") {
-      const uploadResponse = await cloudinary.uploader.upload(content,{resource_type: 'auto'});
+      const uploadResponse = await cloudinary.uploader.upload(content, { resource_type: 'auto' });
       statusContent = uploadResponse.secure_url;
     }
 
+    // Create new status
     const newStatus = new Status({
       userId,
       content: statusContent,
-      type
+      type,
     });
 
     await newStatus.save();
@@ -25,12 +29,20 @@ export const createStatus = async (req, res) => {
     // Notify all users about new status
     io.emit("newStatus", newStatus);
 
-    res.status(201).json(newStatus);
+    // Send both old and new statuses grouped by user to frontend
+    const groupedStatuses = [...oldStatuses, newStatus]; // Include the new status with old ones
+
+    res.status(201).json({
+      userId,
+      statuses: groupedStatuses,
+    });
   } catch (error) {
     console.log("Error in createStatus controller:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+
 
 export const getStatuses = async (req, res) => {
   try {
