@@ -12,47 +12,39 @@ const StatusView = () => {
   const [showStatusViewer, setShowStatusViewer] = useState(false);
   const { socket, authUser } = useAuthStore();
   const statusTimeoutRef = useRef(null);
-
   useEffect(() => {
     const fetchData = async () => {
       await fetchStatuses();
     };
   
+    // Fetch statuses when the component mounts
     fetchData();
-    const intervalId = setInterval(fetchStatuses, 30000);
   
+    // Set up socket listener
     if (socket) {
       socket.on("newStatus", (newStatus) => {
-        console.log("Received new status:", newStatus);
-  
-        setStatuses((prev) => {
-          const updatedStatuses = JSON.parse(JSON.stringify(prev));
-  
-          const userIndex = updatedStatuses.findIndex(
-            (group) => group.user._id === newStatus.userId._id
-          );
-  
-          if (userIndex !== -1) {
-            // Adding new status at the beginning of the user statuses array
-            updatedStatuses[userIndex].statuses.unshift(newStatus);
-          } else {
-            // If user doesn't exist, create a new group
-            updatedStatuses.unshift({
-              user: newStatus.userId,
-              statuses: [newStatus],
-            });
-          }
-  
-          return updatedStatuses; // Trigger re-render
-        });
+        setStatuses((prev) =>
+          prev.map((group) => {
+            if (String(group.user._id) === String(newStatus.userId._id)) {
+              // Add the new status at the top of their statuses array
+              return {
+                ...group,
+                statuses: [newStatus, ...group.statuses],
+              };
+            }
+            return group; // Return the group unchanged if it doesn't match the user
+          })
+        );
       });
     }
   
+    // Cleanup function to remove the socket event listener and clear the interval
     return () => {
-      if (socket) socket.off("newStatus");
-      clearInterval(intervalId);
+      if (socket) {
+        socket.off("newStatus");
+      }
     };
-  }, [selectedStatus]);
+  }, [selectedStatus, socket]); // Add socket to the dependencies to ensure it runs correctly if it changes
   
 
 

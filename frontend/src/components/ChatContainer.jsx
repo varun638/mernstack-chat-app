@@ -167,7 +167,7 @@ const ChatContainer = () => {
                     <audio
                       src={message.image}
                       controls
-                      className="sm:max-w-[250px] rounded-md mb-2"
+                      className="sm:max-w-[200px] rounded-md mb-2"
                       alt="Audio Attachment"
                     />
                   ) : (
