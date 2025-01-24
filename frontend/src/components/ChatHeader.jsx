@@ -16,13 +16,16 @@ const ChatHeader = () => {
         {/* Avatar for direct chat */}
         <div className="avatar">
           <div className="size-10 rounded-full relative">
-            <img src={selectedUser.profilepic || "/avatar.png"} alt={selectedUser.fullName} />
+            <img
+              src={selectedUser.profilepic || "/avatar.png"}
+              alt={selectedUser.fullName || "User"}
+            />
           </div>
         </div>
 
         {/* User info for direct chat */}
         <div className="flex items-center gap-2">
-          <h3 className="font-medium">{selectedUser.fullName}</h3>
+          <h3 className="font-medium">{selectedUser.fullName || "User"}</h3>
         </div>
         <p className="text-sm text-base-content/70">
           {onlineUsers.includes(selectedUser._id) ? "Online" : "Offline"}
@@ -36,7 +39,7 @@ const ChatHeader = () => {
     return (
       <div className="flex items-center gap-3">
         {/* Group name */}
-        <h3 className="font-medium">{selectedUser.name}</h3>
+        <h3 className="font-medium">{selectedUser?.name}</h3>
 
         {/* View members button */}
         <button
@@ -48,17 +51,21 @@ const ChatHeader = () => {
         </button>
 
         <p className="text-sm text-base-content/70">
-          {selectedUser.members?.length || 0} members
+          {selectedUser?.members?.length || 0} members
         </p>
       </div>
     );
   };
 
+  const handleModalClose = () => {
+    setShowMembersModal(false);
+  };
+
   return (
     <div className="p-2.5 border-b border-base-300">
       <div className="flex items-center justify-between">
-        {/* Render either direct chat header or group chat header */}
-        {selectedUser.type === "group" ? renderGroupChatHeader() : renderDirectChatHeader()}
+        {/* Render either direct chat header or group chat header based on selectedUser type */}
+        {selectedUser?.type === "group" ? renderGroupChatHeader() : renderDirectChatHeader()}
 
         {/* Close button */}
         <button onClick={() => setSelectedUser(null)}>
@@ -69,7 +76,7 @@ const ChatHeader = () => {
       {/* Group Members Modal */}
       <GroupMembersModal
         isOpen={showMembersModal}
-        onClose={() => setShowMembersModal(false)}
+        onClose={handleModalClose}
         group={selectedUser}
       />
     </div>

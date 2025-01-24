@@ -22,7 +22,15 @@ const GroupMembersModal = ({ isOpen, onClose, group }) => {
     }
 
     try {
-      await removeMember(group._id, memberId);
+      const updatedGroup = await removeMember(group._id, memberId);
+      if (updatedGroup) {
+        // Update both the modal state and the selected user
+        const newGroup = {
+          ...group,
+          members: group.members.filter(member => member._id !== memberId)
+        };
+        setSelectedUser(newGroup);
+      }
       toast.success("Member removed successfully");
     } catch (error) {
       toast.error("Failed to remove member");
@@ -31,13 +39,16 @@ const GroupMembersModal = ({ isOpen, onClose, group }) => {
 
   const handleExitGroup = async () => {
     if (window.confirm("Are you sure you want to exit this group?")) {
-      await exitGroup(group._id);  // Exit the group
-      setSelectedUser(null); 
-      onClose();  // Close the modal after exiting
-      toast.success("you are exited from group successfully");
+      try {
+        await exitGroup(group._id);
+        setSelectedUser(null);
+        onClose();
+        toast.success("You have exited from the group successfully");
+      } catch (error) {
+        toast.error("Failed to exit group");
+      }
     }
   };
-
 
   const handleDeleteGroup = async () => {
     if (!isAdmin) {
@@ -48,7 +59,7 @@ const GroupMembersModal = ({ isOpen, onClose, group }) => {
     if (window.confirm("Are you sure you want to delete this group? This action cannot be undone.")) {
       try {
         await deleteGroup(group._id);
-        setSelectedUser(null); 
+        setSelectedUser(null);
         onClose();
         toast.success("Group deleted successfully");
       } catch (error) {
@@ -73,8 +84,22 @@ const GroupMembersModal = ({ isOpen, onClose, group }) => {
       return;
     }
 
+    // Check if user is already a member
+    if (group.members.some(member => member._id === userToAdd._id)) {
+      toast.error("User is already a member of this group");
+      return;
+    }
+
     try {
-      await addMember(group._id, userToAdd._id);
+      const updatedGroup = await addMember(group._id, userToAdd._id);
+      if (updatedGroup) {
+        // Update both the modal state and the selected user
+        const newGroup = {
+          ...group,
+          members: [...group.members, userToAdd]
+        };
+        setSelectedUser(newGroup);
+      }
       toast.success("Member added successfully");
     } catch (error) {
       toast.error("Failed to add member");
@@ -161,9 +186,10 @@ const GroupMembersModal = ({ isOpen, onClose, group }) => {
               </>
             ) : (
               <button
-                onClick={() => handleExitGroup(group._id)}
+                onClick={handleExitGroup}
                 className="btn btn-warning w-full"
               >
+                <LogOut className="w-4 h-4 mr-2" />
                 Exit Group
               </button>
             )}
