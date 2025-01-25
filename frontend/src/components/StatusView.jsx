@@ -12,6 +12,30 @@ const StatusView = () => {
   const [showStatusViewer, setShowStatusViewer] = useState(false);
   const { socket, authUser } = useAuthStore();
   const statusTimeoutRef = useRef(null);
+  if (socket) {
+    socket.on("newStatus", (newStatus) => {
+      const index = statuses.findIndex((item) => item?.user?._id === newStatus?.userId);
+      console.log("index",index,statuses[index])
+
+    if (index !== -1) {
+      // Create a copy of the data array
+      const updatedData = [...statuses];
+      updatedData[index] = {
+        ...updatedData[index],
+        statuses: [
+          ...(updatedData[index].statuses || []), // Preserve existing statuses or create an empty array
+          newStatus, // Add the new status object
+        ],
+      };
+      // updatedData[index] = { ...updatedData[index].userId, ...updatedData[index].statuses[updatedData[index].statuses?.length-1].userId };
+      console.log("updatedData",newStatus,updatedData[index],updatedData)
+      // Update the state
+      setStatuses(updatedData);
+    }
+
+    }, [socket]);
+  }
+  useEffect(()=>{console.log("useffect run for statuses",statuses)},[statuses])
   useEffect(() => {
     const fetchData = async () => {
       await fetchStatuses();
@@ -21,22 +45,7 @@ const StatusView = () => {
     fetchData();
   
     // Set up socket listener
-    if (socket) {
-      socket.on("newStatus", (newStatus) => {
-        setStatuses((prev) =>
-          prev.map((group) => {
-            if (String(group.user._id) === String(newStatus.userId._id)) {
-              // Add the new status at the top of their statuses array
-              return {
-                ...group,
-                statuses: [newStatus, ...group.statuses],
-              };
-            }
-            return group; // Return the group unchanged if it doesn't match the user
-          })
-        );
-      });
-    }
+   
   
     // Cleanup function to remove the socket event listener and clear the interval
     return () => {
@@ -126,6 +135,7 @@ const StatusView = () => {
           selectedStatus.statuses[currentIndex].type === "video"
             ? 30000 // 30 seconds for video
             : 5000; // 5 seconds for image/text
+            console.log("timeout")
 
         // Set the timeout to automatically switch to the next status
         statusTimeoutRef.current = setTimeout(() => {

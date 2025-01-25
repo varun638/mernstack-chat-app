@@ -48,7 +48,7 @@ export const getStatuses = async (req, res) => {
   try {
     const statuses = await Status.find()
       .populate("userId", "fullName profilepic")
-      .sort("-createdAt");
+      .sort({ createdAt: 1 });
 
     res.status(200).json(statuses);
   } catch (error) {
