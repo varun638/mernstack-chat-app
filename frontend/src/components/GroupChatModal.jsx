@@ -8,6 +8,7 @@ const GroupChatModal = ({ isOpen, onClose }) => {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const { users, createGroup } = useChatStore();
+  
 
   const filteredUsers = users.filter(user => 
     user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) &&

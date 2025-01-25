@@ -135,12 +135,10 @@ export const useChatStore = create((set, get) => ({
   deleteGroup: async (groupId) => {
     try {
       const res = await axiosInstance.delete(`/messages/groups/${groupId}`);
-
-        // Emit an event to other users in the group
-        const socket = useAuthStore.getState().socket;
-        if (socket) {
-          socket.emit("memberRemoved", { groupId, memberId });
-        }
+      
+      const currentGroups = get().groups;
+      const updatedGroups = currentGroups.filter(group => group._id !== groupId);
+      set({ groups: updatedGroups });
       
       // Check the response to ensure deletion was successful
       if (res.status === 200) {
@@ -148,6 +146,7 @@ export const useChatStore = create((set, get) => ({
         set((state) => ({
           groups: state.groups.filter((group) => group._id !== groupId),
           selectedUser: state.selectedUser?._id === groupId ? null : state.selectedUser,
+          
         }));
       }
       
@@ -162,11 +161,6 @@ export const useChatStore = create((set, get) => ({
         memberId,
       });
 
-        // Emit an event to other users in the group
-        const socket = useAuthStore.getState().socket;
-        if (socket) {
-          socket.emit("memberRemoved", { groupId, memberId });
-        }
       
       // Update the groups list and selected user if it's the current group
       set((state) => {
@@ -192,11 +186,6 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post(`/messages/groups/${groupId}/add-member`, { memberId });
 
-        // Emit an event to other users in the group
-        const socket = useAuthStore.getState().socket;
-        if (socket) {
-          socket.emit("memberRemoved", { groupId, memberId });
-        }
   
       // Update the group in the state immediately after adding the member
       set((state) => {
@@ -222,11 +211,10 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await axiosInstance.post(`/messages/groups/${groupId}/exit`, { memberId });
 
-        // Emit an event to other users in the group
-        const socket = useAuthStore.getState().socket;
-        if (socket) {
-          socket.emit("memberRemoved", { groupId, memberId });
-        }
+
+      const currentGroups = get().groups;
+      const updatedGroups = currentGroups.filter(group => group._id !== groupId);
+      set({ groups: updatedGroups });
   
       // Update the group in the state immediately after adding the member
       set((state) => {
